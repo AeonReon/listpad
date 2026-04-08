@@ -7,19 +7,25 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ListPad">
-    <meta name="theme-color" content="#1a1a2e">
+    <meta name="theme-color" content="#0a1628">
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="images/ListPad.png">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         :root {
-            --bg: #1a1a2e;
-            --surface: #16213e;
-            --card: #0f3460;
-            --accent: #e94560;
-            --text: #eee;
-            --text-dim: #8892a4;
+            --bg: #0a1628;
+            --surface: #111d35;
+            --card: #162544;
+            --card-hover: #1a2d52;
+            --accent: #d4a853;
+            --accent-glow: rgba(212, 168, 83, 0.15);
+            --accent-dim: #a07d3a;
+            --blue: #2a6fc9;
+            --blue-dim: #1e4f8f;
+            --text: #e8e4dc;
+            --text-dim: #6b7a94;
+            --border: rgba(212, 168, 83, 0.12);
             --safe-top: env(safe-area-inset-top);
             --safe-bottom: env(safe-area-inset-bottom);
         }
@@ -39,146 +45,212 @@
             padding: calc(20px + var(--safe-top)) 16px calc(100px + var(--safe-bottom)) 16px;
         }
 
+        /* ====== HEADER ====== */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 14px; }
+
+        .app-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            object-fit: cover;
         }
 
         header h1 {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 700;
             letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--accent), #f0d080);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .date-label {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-dim);
+            margin-top: 2px;
         }
 
-        /* New list input */
-        .new-list-bar {
+        .back-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            color: var(--accent);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .back-btn:active { background: var(--card-hover); }
+        .back-btn.visible { display: flex; }
+
+        /* ====== INPUT BAR ====== */
+        .input-bar {
             display: flex;
             gap: 10px;
             margin-bottom: 24px;
         }
 
-        .new-list-bar input {
+        .input-bar input {
             flex: 1;
             background: var(--surface);
-            border: 2px solid transparent;
+            border: 1.5px solid var(--border);
             border-radius: 14px;
             padding: 14px 18px;
             color: var(--text);
             font-size: 16px;
             outline: none;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        .new-list-bar input:focus {
+        .input-bar input:focus {
             border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
         }
 
-        .new-list-bar input::placeholder {
-            color: var(--text-dim);
-        }
+        .input-bar input::placeholder { color: var(--text-dim); }
 
-        .btn-add-list {
-            background: var(--accent);
+        .btn-add {
+            background: linear-gradient(135deg, var(--accent), #c4953f);
             border: none;
             border-radius: 14px;
-            width: 50px;
-            color: #fff;
-            font-size: 24px;
-            font-weight: 300;
+            width: 52px;
+            color: var(--bg);
+            font-size: 22px;
+            font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s, transform 0.1s;
         }
 
-        .btn-add-list:active { opacity: 0.7; }
+        .btn-add:active { opacity: 0.8; transform: scale(0.95); }
 
-        /* List cards */
-        .lists-container {
+        /* ====== LIST CARDS (Master view) ====== */
+        .cards-container {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
         }
 
         .list-card {
             background: var(--surface);
-            border-radius: 18px;
-            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
             animation: slideIn 0.25s ease-out;
         }
 
+        .list-card:active { background: var(--card); transform: scale(0.98); }
+
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(12px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .list-header {
+        .card-left { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+
+        .card-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--card), var(--card-hover));
+            border: 1px solid var(--border);
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 14px;
-        }
-
-        .list-title {
+            justify-content: center;
             font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .card-info { min-width: 0; }
+
+        .card-name {
+            font-size: 16px;
             font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .list-actions {
-            display: flex;
-            gap: 8px;
+        .card-count {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 2px;
         }
 
-        .btn-icon {
-            background: none;
-            border: none;
+        .card-arrow {
             color: var(--text-dim);
             font-size: 18px;
-            padding: 6px;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+
+        .card-delete {
+            background: none;
+            border: none;
+            color: transparent;
+            font-size: 20px;
+            padding: 8px;
             cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s;
+            transition: color 0.2s;
+            flex-shrink: 0;
         }
 
-        .btn-icon:hover { color: var(--text); }
-        .btn-icon.delete:hover, .btn-icon.delete:active { color: var(--accent); }
+        .list-card:hover .card-delete,
+        .list-card:active .card-delete { color: var(--text-dim); }
+        .card-delete:active { color: #e05555 !important; }
 
-        /* Items */
-        .items {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+        /* ====== DETAIL VIEW ====== */
+        .detail-view { display: none; }
+        .detail-view.active { display: block; }
+        .master-view.hidden { display: none; }
+
+        .detail-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--accent);
         }
+
+        /* ====== ITEMS ====== */
+        .items { display: flex; flex-direction: column; gap: 8px; }
 
         .item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            background: rgba(255,255,255,0.04);
-            border-radius: 12px;
-            transition: opacity 0.2s;
+            gap: 14px;
+            padding: 14px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            transition: all 0.2s;
+            animation: slideIn 0.2s ease-out;
         }
 
-        .item.done {
-            opacity: 0.4;
-        }
-
-        .item.done .item-text {
-            text-decoration: line-through;
-        }
+        .item.done { opacity: 0.45; }
+        .item.done .item-text { text-decoration: line-through; color: var(--text-dim); }
 
         .item-check {
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             border: 2px solid var(--text-dim);
             background: none;
@@ -194,8 +266,8 @@
 
         .item.done .item-check {
             border-color: var(--accent);
-            background: var(--accent);
-            color: #fff;
+            background: linear-gradient(135deg, var(--accent), #c4953f);
+            color: var(--bg);
         }
 
         .item-text {
@@ -209,77 +281,36 @@
             background: none;
             border: none;
             color: transparent;
-            font-size: 16px;
-            padding: 4px;
+            font-size: 18px;
+            padding: 4px 6px;
             cursor: pointer;
             transition: color 0.2s;
         }
 
         .item:hover .item-delete,
-        .item:active .item-delete {
-            color: var(--text-dim);
-        }
+        .item:active .item-delete { color: var(--text-dim); }
+        .item-delete:active { color: #e05555 !important; }
 
-        .item-delete:active { color: var(--accent) !important; }
-
-        /* Add item row */
-        .add-item-row {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .add-item-row input {
-            flex: 1;
-            background: rgba(255,255,255,0.06);
-            border: none;
-            border-radius: 10px;
-            padding: 10px 14px;
-            color: var(--text);
-            font-size: 15px;
-            outline: none;
-        }
-
-        .add-item-row input::placeholder { color: var(--text-dim); }
-
-        .btn-add-item {
-            background: var(--card);
-            border: none;
-            border-radius: 10px;
-            padding: 10px 16px;
-            color: var(--text);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-add-item:active { opacity: 0.7; }
-
-        /* Empty state */
+        /* ====== EMPTY STATE ====== */
         .empty-state {
             text-align: center;
-            padding: 80px 20px;
+            padding: 60px 20px;
             color: var(--text-dim);
         }
 
         .empty-state .icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-            opacity: 0.5;
+            font-size: 42px;
+            margin-bottom: 14px;
+            opacity: 0.4;
         }
 
-        .empty-state p {
-            font-size: 16px;
-            line-height: 1.5;
-        }
+        .empty-state p { font-size: 15px; line-height: 1.5; }
 
-        /* Delete confirmation */
+        /* ====== CONFIRM DIALOG ====== */
         .confirm-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.65);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -292,6 +323,7 @@
 
         .confirm-box {
             background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 20px;
             padding: 28px 24px;
             max-width: 300px;
@@ -299,20 +331,13 @@
             text-align: center;
         }
 
-        .confirm-box p {
-            font-size: 16px;
-            margin-bottom: 20px;
-            line-height: 1.4;
-        }
+        .confirm-box p { font-size: 16px; margin-bottom: 20px; line-height: 1.4; }
 
-        .confirm-buttons {
-            display: flex;
-            gap: 10px;
-        }
+        .confirm-buttons { display: flex; gap: 10px; }
 
         .confirm-buttons button {
             flex: 1;
-            padding: 12px;
+            padding: 13px;
             border: none;
             border-radius: 12px;
             font-size: 15px;
@@ -321,61 +346,85 @@
         }
 
         .btn-cancel {
-            background: rgba(255,255,255,0.1);
+            background: var(--card);
+            border: 1px solid var(--border);
             color: var(--text);
         }
 
         .btn-confirm-delete {
-            background: var(--accent);
+            background: #c0392b;
             color: #fff;
         }
 
-        /* Clear all */
+        /* ====== CLEAR ALL ====== */
         .clear-all-bar {
-            margin-top: 32px;
+            margin-top: 28px;
             text-align: center;
         }
 
         .btn-clear-all {
             background: none;
-            border: 1px solid rgba(233,69,96,0.3);
-            color: var(--accent);
+            border: 1px solid rgba(192, 57, 43, 0.3);
+            color: #c0392b;
             padding: 12px 28px;
             border-radius: 12px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
         }
 
-        .btn-clear-all:active {
-            background: var(--accent);
-            color: #fff;
+        .btn-clear-all:active { background: #c0392b; color: #fff; }
+
+        /* ====== SUBTLE GOLD LINE ====== */
+        .gold-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), var(--accent), var(--accent-glow), transparent);
+            margin: 4px 0 24px;
+            opacity: 0.5;
         }
     </style>
 </head>
 <body>
     <div class="app">
         <header>
-            <div>
-                <h1>ListPad</h1>
-                <div class="date-label" id="dateLabel"></div>
+            <div class="header-left">
+                <img src="images/ListPad.png" class="app-icon" alt="ListPad">
+                <div>
+                    <h1>ListPad</h1>
+                    <div class="date-label" id="dateLabel"></div>
+                </div>
             </div>
+            <button class="back-btn" id="backBtn" onclick="goBack()">&#8592; Back</button>
         </header>
 
-        <div class="new-list-bar">
-            <input type="text" id="newListInput" placeholder="New list name..." autocomplete="off">
-            <button class="btn-add-list" id="addListBtn">+</button>
+        <div class="gold-divider"></div>
+
+        <!-- MASTER VIEW -->
+        <div class="master-view" id="masterView">
+            <div class="input-bar">
+                <input type="text" id="newListInput" placeholder="New list..." autocomplete="off">
+                <button class="btn-add" id="addListBtn" onclick="addList()">+</button>
+            </div>
+            <div class="cards-container" id="cardsContainer"></div>
         </div>
 
-        <div class="lists-container" id="listsContainer"></div>
+        <!-- DETAIL VIEW -->
+        <div class="detail-view" id="detailView">
+            <div class="detail-title" id="detailTitle"></div>
+            <div class="input-bar">
+                <input type="text" id="newItemInput" placeholder="Add item..." autocomplete="off">
+                <button class="btn-add" onclick="addItem()">+</button>
+            </div>
+            <div class="items" id="itemsContainer"></div>
+        </div>
     </div>
 
     <script>
         // State
         let lists = JSON.parse(localStorage.getItem('listpad_lists') || '[]');
+        let currentList = null; // index of open list, or null for master
 
-        // Save
         function save() {
             localStorage.setItem('listpad_lists', JSON.stringify(lists));
         }
@@ -385,55 +434,103 @@
             weekday: 'long', day: 'numeric', month: 'long'
         });
 
-        // Render
-        function render() {
-            const container = document.getElementById('listsContainer');
-
-            if (lists.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon">&#9776;</div>
-                        <p>No lists yet.<br>Create one above to get started.</p>
-                    </div>`;
-                return;
-            }
-
-            container.innerHTML = lists.map((list, li) => `
-                <div class="list-card" data-list="${li}">
-                    <div class="list-header">
-                        <span class="list-title">${esc(list.name)}</span>
-                        <div class="list-actions">
-                            <button class="btn-icon delete" onclick="confirmDelete(${li})" title="Delete list">&times;</button>
-                        </div>
-                    </div>
-                    <div class="items">
-                        ${list.items.map((item, ii) => `
-                            <div class="item ${item.done ? 'done' : ''}">
-                                <button class="item-check" onclick="toggleItem(${li},${ii})">${item.done ? '&#10003;' : ''}</button>
-                                <span class="item-text">${esc(item.text)}</span>
-                                <button class="item-delete" onclick="deleteItem(${li},${ii})">&times;</button>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="add-item-row">
-                        <input type="text" placeholder="Add item..." onkeydown="if(event.key==='Enter')addItem(${li},this)" autocomplete="off">
-                        <button class="btn-add-item" onclick="addItem(${li},this.previousElementSibling)">Add</button>
-                    </div>
-                </div>
-            `).join('') + (lists.length > 0 ? `
-                <div class="clear-all-bar">
-                    <button class="btn-clear-all" onclick="confirmClearAll()">Clear All Lists</button>
-                </div>
-            ` : '');
-        }
-
+        // Escape HTML
         function esc(str) {
             const d = document.createElement('div');
             d.textContent = str;
             return d.innerHTML;
         }
 
-        // Add list
+        // List icons (rotate through a small set)
+        const listIcons = ['📋', '📝', '🛒', '✅', '📌', '⭐', '💡', '🎯'];
+        function getIcon(index) { return listIcons[index % listIcons.length]; }
+
+        // Enter key listeners
+        document.getElementById('newListInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') addList();
+        });
+        document.getElementById('newItemInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') addItem();
+        });
+
+        // ====== NAVIGATION ======
+        function openList(index) {
+            currentList = index;
+            renderDetail();
+            document.getElementById('masterView').classList.add('hidden');
+            document.getElementById('detailView').classList.add('active');
+            document.getElementById('backBtn').classList.add('visible');
+        }
+
+        function goBack() {
+            currentList = null;
+            document.getElementById('detailView').classList.remove('active');
+            document.getElementById('masterView').classList.remove('hidden');
+            document.getElementById('backBtn').classList.remove('visible');
+            renderMaster();
+        }
+
+        // ====== MASTER VIEW ======
+        function renderMaster() {
+            const container = document.getElementById('cardsContainer');
+
+            if (lists.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📋</div>
+                        <p>No lists yet.<br>Create one above to get started.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = lists.map((list, i) => {
+                const total = list.items.length;
+                const done = list.items.filter(it => it.done).length;
+                const countText = total === 0 ? 'Empty' : `${done}/${total} done`;
+                return `
+                <div class="list-card" onclick="openList(${i})">
+                    <div class="card-left">
+                        <div class="card-icon">${getIcon(i)}</div>
+                        <div class="card-info">
+                            <div class="card-name">${esc(list.name)}</div>
+                            <div class="card-count">${countText}</div>
+                        </div>
+                    </div>
+                    <button class="card-delete" onclick="event.stopPropagation(); confirmDeleteList(${i})" title="Delete">&times;</button>
+                    <span class="card-arrow">&#8250;</span>
+                </div>`;
+            }).join('') + (lists.length > 1 ? `
+                <div class="clear-all-bar">
+                    <button class="btn-clear-all" onclick="confirmClearAll()">Clear All Lists</button>
+                </div>` : '');
+        }
+
+        // ====== DETAIL VIEW ======
+        function renderDetail() {
+            if (currentList === null) return;
+            const list = lists[currentList];
+            document.getElementById('detailTitle').textContent = list.name;
+
+            const container = document.getElementById('itemsContainer');
+            if (list.items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">✏️</div>
+                        <p>No items yet.<br>Add one above.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = list.items.map((item, ii) => `
+                <div class="item ${item.done ? 'done' : ''}">
+                    <button class="item-check" onclick="toggleItem(${ii})">${item.done ? '&#10003;' : ''}</button>
+                    <span class="item-text">${esc(item.text)}</span>
+                    <button class="item-delete" onclick="deleteItem(${ii})">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        // ====== ACTIONS ======
         function addList() {
             const input = document.getElementById('newListInput');
             const name = input.value.trim();
@@ -441,63 +538,50 @@
             lists.unshift({ name, items: [] });
             input.value = '';
             save();
-            render();
+            renderMaster();
         }
 
-        document.getElementById('addListBtn').addEventListener('click', addList);
-        document.getElementById('newListInput').addEventListener('keydown', e => {
-            if (e.key === 'Enter') addList();
-        });
-
-        // Add item
-        function addItem(li, input) {
+        function addItem() {
+            if (currentList === null) return;
+            const input = document.getElementById('newItemInput');
             const text = input.value.trim();
             if (!text) return;
-            lists[li].items.push({ text, done: false });
+            lists[currentList].items.push({ text, done: false });
             input.value = '';
             save();
-            render();
-            // Re-focus the same list's input
-            const cards = document.querySelectorAll('.list-card');
-            if (cards[li]) {
-                const newInput = cards[li].querySelector('.add-item-row input');
-                if (newInput) newInput.focus();
-            }
+            renderDetail();
+            input.focus();
         }
 
-        // Toggle item
-        function toggleItem(li, ii) {
-            lists[li].items[ii].done = !lists[li].items[ii].done;
+        function toggleItem(ii) {
+            lists[currentList].items[ii].done = !lists[currentList].items[ii].done;
             save();
-            render();
+            renderDetail();
         }
 
-        // Delete item
-        function deleteItem(li, ii) {
-            lists[li].items.splice(ii, 1);
+        function deleteItem(ii) {
+            lists[currentList].items.splice(ii, 1);
             save();
-            render();
+            renderDetail();
         }
 
-        // Delete list with confirmation
-        function confirmDelete(li) {
+        function confirmDeleteList(li) {
             showConfirm(`Delete "${esc(lists[li].name)}"?`, () => {
                 lists.splice(li, 1);
                 save();
-                render();
+                if (currentList !== null) goBack();
+                else renderMaster();
             });
         }
 
-        // Clear all
         function confirmClearAll() {
             showConfirm('Delete all lists?', () => {
                 lists = [];
                 save();
-                render();
+                renderMaster();
             });
         }
 
-        // Confirm dialog
         function showConfirm(msg, onYes) {
             const overlay = document.createElement('div');
             overlay.className = 'confirm-overlay';
@@ -521,7 +605,7 @@
         }
 
         // Init
-        render();
+        renderMaster();
     </script>
 </body>
 </html>
