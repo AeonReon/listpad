@@ -1,5 +1,5 @@
-const CACHE = 'listpad-v2';
-const ASSETS = ['/', '/index.html', '/manifest.json', '/images/ListPad.png'];
+const CACHE = 'listpad-v3';
+const ASSETS = ['/', '/index.html', '/manifest.json', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/icon-1024.png', '/icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
     e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
